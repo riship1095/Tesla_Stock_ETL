@@ -1,0 +1,17 @@
+import json
+import boto3
+from datetime import date
+import base64
+
+s3 = boto3.client('s3')
+def lambda_handler(event, context):
+    object_key = 'data-{}.json'.format(str(date.today()))
+    bucket_name = 'kinesis-bucket-raw-data'
+    file = {'data':[]}
+    for record in event['Records']:
+        data = record['kinesis']['data']
+        decoded = base64.b64decode(data)
+        data_decoded = json.loads(decoded)
+        file['data'].append(data_decoded)
+    s3.put_object(Body=json.dumps(file), Bucket=bucket_name, Key=object_key)
+    return 'Successfully processed'
